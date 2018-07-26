@@ -3,9 +3,9 @@ package api
 import (
 	"crypto/tls"
 	"fmt"
+	"os"
 
 	"github.com/tomnomnom/linkheader"
-
 	resty "gopkg.in/resty.v0"
 )
 
@@ -49,6 +49,7 @@ type ErrorDetail struct {
 type Config struct {
 	APIKey    string
 	BaseURL   string
+	ProxyURL  string
 	Debug     bool
 	TLSConfig *tls.Config
 }
@@ -60,6 +61,16 @@ func New(config Config) Client {
 	baseURL := config.BaseURL
 	if baseURL == "" {
 		baseURL = "https://api.newrelic.com/v2"
+	}
+
+	proxyURL := config.ProxyURL
+	if proxyURL != "" {
+		r.SetProxy(proxyURL)
+	} else {
+		envHTTPProxy := os.Getenv("https_proxy")
+		if envHTTPProxy != "" {
+			r.SetProxy(envHTTPProxy)
+		}
 	}
 
 	r.SetHeader("X-Api-Key", config.APIKey)
